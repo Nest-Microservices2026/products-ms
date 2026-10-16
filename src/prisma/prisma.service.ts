@@ -1,5 +1,5 @@
 
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { PrismaClient } from '../generated/prisma/client.js';
@@ -8,11 +8,16 @@ import { PrismaClient } from '../generated/prisma/client.js';
 export class PrismaService
     extends PrismaClient
     implements OnModuleInit, OnModuleDestroy {
+
+    private readonly logger = new Logger('PrismaService');
+
     constructor(configService: ConfigService) {
         const adapter = new PrismaBetterSqlite3({
             url: configService.getOrThrow<string>('DATABASE_URL'),
         });
         super({ adapter });
+
+        this.logger.log('Data base connected');
     }
 
     async onModuleInit() {
