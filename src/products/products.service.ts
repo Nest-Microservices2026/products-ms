@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 
+
 @Injectable()
 export class ProductService {
   constructor(private readonly prisma: PrismaService) { }
@@ -15,4 +16,8 @@ export class ProductService {
     return product;
   }
 
+  findAll(){
+    return this.prisma.product.findMany({});
+  }
 }
+
