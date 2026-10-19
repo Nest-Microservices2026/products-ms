@@ -21,14 +21,17 @@ export class ProductService {
   async findAll(paginationDto: PaginationDto) {
     const { page, limit } = paginationDto;
 
-    const totalPage = await this.prisma.product.count();
+    const totalPage = await this.prisma.product.count({
+      where:{available:true}
+    });
 
     const lastPage = Math.ceil(totalPage / limit!);
 
     return {
       data: await this.prisma.product.findMany({
         skip: (page! - 1) * limit!,
-        take: limit
+        take: limit,
+        where:({available:true})
       }),
       meta: {
         totalpage: totalPage,
@@ -41,7 +44,8 @@ export class ProductService {
   async findOne(id: number) {
     const product = await this.prisma.product.findFirst({
       where: {
-        id: id
+        id: id,
+        available:true
       }
     });
 
@@ -68,11 +72,18 @@ export class ProductService {
 
   async remove(id: number) {
     await this.findOne(id);
-    await this.prisma.product.delete({
-      where: {
-        id: id
-      }
-    });
+    //This is #1 option
+    // await this.prisma.product.delete({
+    //   where: {
+    //     id: id
+    //   }
+    // });
+
+    // This is the #2 option
+    await this.prisma.product.update({
+      where: { id: id },
+      data: { available: false }
+    })
     return {
       message: "The product has been deleted."
     }
