@@ -16,12 +16,11 @@ export class PrismaService
             url: configService.getOrThrow<string>('DATABASE_URL'),
         });
         super({ adapter });
-
-        this.logger.log('Data base connected');
     }
 
     async onModuleInit() {
         await this.$connect();
+        this.logger.log('Data base connected');
     }
 
     async onModuleDestroy() {
