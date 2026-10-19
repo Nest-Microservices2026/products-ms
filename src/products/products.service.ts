@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { UpdateProductDto } from './dto/update-product.dto.js';
 
 
 @Injectable()
@@ -47,6 +48,21 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException(`The product with the id : ${id} was not found`);
     }
+    return product;
+  }
+
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    await this.findOne(id);
+    const { name, price } = updateProductDto;
+    const product = await this.prisma.product.update({
+      where: {
+        id: id
+      },
+      data: {
+        name: name,
+        price: price
+      }
+    })
     return product;
   }
 }
