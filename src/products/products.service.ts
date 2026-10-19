@@ -65,5 +65,17 @@ export class ProductService {
     })
     return product;
   }
+
+  async remove(id: number) {
+    await this.findOne(id);
+    await this.prisma.product.delete({
+      where: {
+        id: id
+      }
+    });
+    return {
+      message: "The product has been deleted."
+    }
+  }
 }
 
