@@ -1,9 +1,10 @@
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { UpdateProductDto } from './dto/update-product.dto.js';
+import { RpcException } from '@nestjs/microservices';
 
 
 @Injectable()
@@ -12,10 +13,19 @@ export class ProductService {
 
 
   async create(createProductDto: CreateProductDto) {
-    const product = await this.prisma.product.create({
-      data: createProductDto
-    })
-    return product;
+    try {
+      const product = await this.prisma.product.create({
+        data: createProductDto
+      });
+      
+      return product;
+
+    } catch (error) {
+      throw new RpcException({
+        message: error,
+        status: HttpStatus.BAD_REQUEST
+      });
+    }
   }
 
   async findAll(paginationDto: PaginationDto) {
@@ -42,7 +52,7 @@ export class ProductService {
   }
 
   async findOne(id: number) {
-    const product = await this.prisma.product.findFirst({
+    const product = await this.prisma.product.findFirst({                   
       where: {
         id: id,
         available: true
@@ -50,20 +60,23 @@ export class ProductService {
     });
 
     if (!product) {
-      throw new NotFoundException(`The product with the id : ${id} was not found`);
+      throw new RpcException({
+        message: `The product with the id : ${id} was not found`,
+        status: HttpStatus.BAD_REQUEST
+      });
     }
     return product;
   }
 
-  async update(updateProductDto: UpdateProductDto) {
-    const { id, ...data } = updateProductDto;
+  async update(id:number,updateProductDto: UpdateProductDto) {
+    const {...data } = updateProductDto;
     await this.findOne(id);
     const product = await this.prisma.product.update({
       where: {
         id: id
       },
       data: {
-        data
+        ...data
       }
     })
     return product;
@@ -72,14 +85,7 @@ export class ProductService {
 
   async remove(id: number) {
     await this.findOne(id);
-    //This is #1 option
-    // await this.prisma.product.delete({
-    //   where: {
-    //     id: id
-    //   }
-    // });
 
-    // This is the #2 option
     await this.prisma.product.update({
       where: { id: id },
       data: { available: false }
