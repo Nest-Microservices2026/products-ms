@@ -17,7 +17,7 @@ export class ProductService {
       const product = await this.prisma.product.create({
         data: createProductDto
       });
-      
+
       return product;
 
     } catch (error) {
@@ -52,7 +52,7 @@ export class ProductService {
   }
 
   async findOne(id: number) {
-    const product = await this.prisma.product.findFirst({                   
+    const product = await this.prisma.product.findFirst({
       where: {
         id: id,
         available: true
@@ -68,8 +68,8 @@ export class ProductService {
     return product;
   }
 
-  async update(id:number,updateProductDto: UpdateProductDto) {
-    const {...data } = updateProductDto;
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    const { ...data } = updateProductDto;
     await this.findOne(id);
     const product = await this.prisma.product.update({
       where: {
@@ -89,10 +89,31 @@ export class ProductService {
     await this.prisma.product.update({
       where: { id: id },
       data: { available: false }
-    })
+    });
     return {
       message: "The product has been deleted."
     }
+  }
+
+  async validateProducts(ids: number[]) {
+    ids = Array.from(new Set(ids));
+
+    const products = await this.prisma.product.findMany({
+      where: {
+        id: {
+          in: ids
+        }
+      }
+    });
+
+    if (products.length !== ids.length) {
+      throw new RpcException({
+        message: "Some products were not found.",
+        status: HttpStatus.BAD_REQUEST
+      });
+    }
+
+    return products;
   }
 }
 
